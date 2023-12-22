@@ -5,6 +5,7 @@ from email import utils
 import Services.News_services as Ns
 from Util.Util_functions import *
 import Screens.Login.Login_screen as Ls
+import Services.Users_services as Us
 
 # Functions for news
 # ==================================================================
@@ -63,14 +64,15 @@ def news_choice_txt(owner, id):
             list_news_txt(owner)
 
         case '1':
-            delete_dir(f'./Users' + '/{owner}' + '/News' + '/{id}')
+            delete_dir(f'./Users/' + owner + '/News/' + id)
 
         case '2':
-            edit_list_txt(owner)
+            edit_list_txt(owner, id)
         
         case _:
                 print('Opção inválida.')
-                edit_list_txt(owner)
+                news_choice_txt(owner, id)
+
 
 def news_choice_search_txt(owner, id, creator): #creator é quem está acessando a notícia, já owner é o dono
     print('╔═══════════════════════╗')
@@ -106,52 +108,30 @@ def news_choice_search_txt(owner, id, creator): #creator é quem está acessando
         
         case _:
                 print('Opção inválida.')
-                edit_list_txt(owner)
+                news_choice_search_txt(owner, id, creator)
 
 
-def edit_list_txt(owner):
+def edit_list_txt(owner, id):
+       
+    print('Selecione o que deseja editar: ')
+    option1 = input('0- Título\n1- Conteúdo\n')
     
-    print('Insira o Id da noticia que deseja editar: ')
-    option = input()
-    
-    if option in Ns.list_news(owner):
+    match option1:
         
-        print('Selecione o que deseja editar: ')
-        option1 = input('0- Título\n1- Conteúdo\n')
+        case '0':
+            newtitle = input('Novo título: ')
+            Ns.edit_news_title(owner, id, newtitle)
+            edit_news_success_txt()
         
-        match option1:
-            
-            case '0':
-                newtitle = input('Novo título: ')
-                Ns.edit_news_title(owner, option, newtitle)
-                edit_news_success_txt()
-           
-            case '1':
-                newcontent = input('Novo conteúdo: ')
-                Ns.edit_news_content(owner, option, newcontent)
-                edit_news_success_txt()
+        case '1':
+            newcontent = input('Novo conteúdo: ')
+            Ns.edit_news_content(owner, id, newcontent)
+            edit_news_success_txt()
 
-            case _:
-                print('Opção inválida.')
-                edit_list_txt(owner)
-   
-    else:
-        print('Noticia inexistente')
-        Ls.menu_adm_txt(owner)
+        case _:
+            print('Opção inválida.')
+            edit_list_txt(owner, id)
 
-
-def delete_list_txt(owner):
-    
-    print('Insira o Id da noticia que deseja excluir: ')
-    option = input()
-    
-    if option in Ns.list_news(owner):
-        Ns.delete_news(owner, option)
-        delete_news_success_txt()
-    
-    else:
-        print('Noticia inexistente')
-        Ls.menu_adm_txt(owner)
 
 def search_screen_txt(owner):
     
@@ -170,7 +150,33 @@ def search_screen_txt(owner):
         print('Insira o nome do autor e o id da noticia para visualiza-la')
         nome_autor = input('Autor: ')
         id_noticia = input('Id: ')
-        news_choice_search_txt(nome_autor, id_noticia, owner)
+        
+        if owner == nome_autor:
+           
+            if Us.get_user(owner)[3] == 'Jornalista':
+                option = input('0- Voltar\n1- Deletar noticia\n2- Editar noticia\n')
+               
+                match option:
+                    
+                    case '0':
+                        list_news_txt(owner)
+
+                    case '1':
+                        delete_dir(f'./Users/' + owner + '/News/' + id)
+
+                    case '2':
+                        edit_list_txt(owner, id)
+                    
+                    case _:
+                            print('Opção inválida.')
+                            news_choice_txt(owner, id)
+
+            else:
+                news_choice_search_txt(nome_autor, id_noticia, owner)
+        
+        else:
+                news_choice_search_txt(nome_autor, id_noticia, owner)
+
 
 # ============================================================================================
 # Telas para interação Leitor - Notícias
